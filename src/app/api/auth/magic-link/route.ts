@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { generateMagicLink } from "@/lib/auth";
 import { sendMagicLinkEmail } from "@/lib/email";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 
 const magicLinkSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -32,6 +33,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { success: false, error: error.errors[0].message },
         { status: 400 }
+      );
+    }
+
+    // Handle Prisma/database errors - don't expose internal details
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError ||
+      error instanceof Prisma.PrismaClientInitializationError ||
+      (error instanceof Error && error.message.includes("prisma"))
+    ) {
+      console.error("Database error during magic link generation:", error);
+      return NextResponse.json(
+        { success: false, error: "Service temporarily unavailable. Please try again later." },
+        { status: 503 }
       );
     }
 
