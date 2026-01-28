@@ -27,11 +27,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Handle Prisma/database errors - don't expose internal details
-    if (
+    const errorMessage = error instanceof Error ? error.message.toLowerCase() : "";
+    const isDatabaseError =
       error instanceof Prisma.PrismaClientKnownRequestError ||
       error instanceof Prisma.PrismaClientInitializationError ||
-      (error instanceof Error && error.message.includes("prisma"))
-    ) {
+      errorMessage.includes("prisma") ||
+      errorMessage.includes("database") ||
+      errorMessage.includes("connection") ||
+      errorMessage.includes("connect econnrefused") ||
+      errorMessage.includes("localhost:5432");
+
+    if (isDatabaseError) {
       console.error("Database error during magic link verification:", error);
       return NextResponse.json(
         { success: false, error: "Service temporarily unavailable. Please try again later." },
