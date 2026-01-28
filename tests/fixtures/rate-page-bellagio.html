@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Bellagio Hotel Booking - MGM Resorts</title>
+</head>
+<body>
+    <div class="booking-container">
+        <h1>Bellagio Hotel & Casino</h1>
+        <div class="check-dates">
+            <span>Check-in: March 15, 2024</span>
+            <span>Check-out: March 17, 2024</span>
+        </div>
+
+        <div class="room-results">
+            <div class="room-card" data-testid="room-card">
+                <div class="room-name" data-testid="room-name">Bellagio Room, 2 Queens</div>
+                <div class="room-details">
+                    <p>Two queen beds, 510 sq ft</p>
+                </div>
+                <div class="rate-section">
+                    <div class="rate-price" data-testid="rate-price">$189.00</div>
+                    <div class="rate-type">per night</div>
+                    <div class="taxes">+ $45.32 taxes & fees</div>
+                    <div class="resort-fee">+ $45.00 resort fee per night</div>
+                </div>
+                <button class="book-now">Book Now</button>
+            </div>
+
+            <div class="room-card" data-testid="room-card">
+                <div class="room-name" data-testid="room-name">Bellagio Room, 1 King</div>
+                <div class="room-details">
+                    <p>One king bed, 510 sq ft</p>
+                </div>
+                <div class="rate-section">
+                    <div class="rate-price" data-testid="rate-price">$199.00</div>
+                    <div class="rate-type">per night</div>
+                    <div class="taxes">+ $47.78 taxes & fees</div>
+                    <div class="resort-fee">+ $45.00 resort fee per night</div>
+                </div>
+                <button class="book-now">Book Now</button>
+            </div>
+
+            <div class="room-card" data-testid="room-card">
+                <div class="room-name" data-testid="room-name">Salone Suite</div>
+                <div class="room-details">
+                    <p>One king bed, 920 sq ft, Fountain view</p>
+                </div>
+                <div class="rate-section">
+                    <div class="rate-price" data-testid="rate-price">$349.00</div>
+                    <div class="rate-type">per night</div>
+                    <div class="taxes">+ $83.89 taxes & fees</div>
+                    <div class="resort-fee">+ $45.00 resort fee per night</div>
+                </div>
+                <button class="book-now">Book Now</button>
+            </div>
+        </div>
+
+        <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "Hotel",
+            "name": "Bellagio Hotel & Casino",
+            "address": {
+                "@type": "PostalAddress",
+                "streetAddress": "3600 S Las Vegas Blvd",
+                "addressLocality": "Las Vegas",
+                "addressRegion": "NV",
+                "postalCode": "89109"
+            },
+            "priceRange": "$189 - $1500",
+            "offers": [
+                {
+                    "@type": "Offer",
+                    "name": "Bellagio Room, 2 Queens",
+                    "price": "189.00",
+                    "priceCurrency": "USD"
+                },
+                {
+                    "@type": "Offer",
+                    "name": "Bellagio Room, 1 King",
+                    "price": "199.00",
+                    "priceCurrency": "USD"
+                }
+            ]
+        }
+        </script>
+    </div>
+</body>
+</html>

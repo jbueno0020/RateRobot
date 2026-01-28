@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ARIA Resort - Member Rates - MGM Resorts</title>
+</head>
+<body>
+    <div class="booking-container">
+        <header>
+            <nav>
+                <div class="logged-in-user" data-testid="account-menu">
+                    <span class="welcome-message">Welcome, John D.</span>
+                    <span class="mlife-tier">M life Gold</span>
+                    <span class="mlife-points">125,000 Points</span>
+                </div>
+            </nav>
+        </header>
+
+        <h1>ARIA Resort & Casino</h1>
+        <div class="member-banner">
+            <span class="member-rate-label">M life Member Rate</span>
+        </div>
+
+        <div class="check-dates">
+            <span>Check-in: April 5, 2024</span>
+            <span>Check-out: April 7, 2024</span>
+        </div>
+
+        <div class="room-results">
+            <div class="room-card" data-testid="room-card">
+                <div class="room-name" data-testid="room-name">Deluxe Room, 1 King</div>
+                <div class="member-badge">M life Rate</div>
+                <div class="room-details">
+                    <p>One king bed, 520 sq ft, Strip view</p>
+                </div>
+                <div class="rate-section">
+                    <div class="original-price">$259.00</div>
+                    <div class="rate-price member-price" data-testid="rate-price">$169.00</div>
+                    <div class="savings">You save $90!</div>
+                    <div class="rate-type">avg/night</div>
+                    <div class="taxes">+ $40.68 taxes & fees</div>
+                    <div class="resort-fee">+ $45.00 resort fee per night</div>
+                </div>
+                <button class="book-now">Book Now</button>
+            </div>
+
+            <div class="room-card" data-testid="room-card">
+                <div class="room-name" data-testid="room-name">Sky Suite, 1 King</div>
+                <div class="member-badge">M life Rate</div>
+                <div class="room-details">
+                    <p>One king bed, 1,050 sq ft, Panoramic view</p>
+                </div>
+                <div class="rate-section">
+                    <div class="original-price">$489.00</div>
+                    <div class="rate-price member-price" data-testid="rate-price">$329.00</div>
+                    <div class="savings">You save $160!</div>
+                    <div class="rate-type">avg/night</div>
+                    <div class="taxes">+ $79.10 taxes & fees</div>
+                    <div class="resort-fee">+ $45.00 resort fee per night</div>
+                </div>
+                <button class="book-now">Book Now</button>
+            </div>
+        </div>
+
+        <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "Hotel",
+            "name": "ARIA Resort & Casino",
+            "address": {
+                "@type": "PostalAddress",
+                "streetAddress": "3730 S Las Vegas Blvd",
+                "addressLocality": "Las Vegas",
+                "addressRegion": "NV",
+                "postalCode": "89158"
+            },
+            "priceRange": "$169 - $2000",
+            "offers": [
+                {
+                    "@type": "Offer",
+                    "name": "Deluxe Room, 1 King - Member Rate",
+                    "price": "169.00",
+                    "priceCurrency": "USD"
+                }
+            ]
+        }
+        </script>
+    </div>
+</body>
+</html>

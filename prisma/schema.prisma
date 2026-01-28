@@ -1,0 +1,264 @@
+// Rate Robot - Database Schema
+// Tracks MGM hotel rates for user-configured watchlists
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// User Authentication
+// ============================================
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  passwordHash  String?   @map("password_hash")
+
+  // Magic link auth
+  magicLinkToken    String?   @map("magic_link_token")
+  magicLinkExpires  DateTime? @map("magic_link_expires")
+
+  emailVerified DateTime? @map("email_verified")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  // Relationships
+  mgmSessions   MgmSession[]
+  watchlists    Watchlist[]
+  alerts        Alert[]
+  sessions      Session[]
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@map("sessions")
+}
+
+// ============================================
+// MGM Session Management
+// ============================================
+
+model MgmSession {
+  id                  String    @id @default(uuid())
+  userId              String    @map("user_id")
+
+  // Encrypted cookie jar (AES-256-GCM)
+  // Contains session cookies needed for member pricing
+  encryptedCookieJar  String    @map("encrypted_cookie_jar") @db.Text
+
+  // IV and auth tag for decryption
+  encryptionIv        String    @map("encryption_iv")
+  encryptionTag       String    @map("encryption_tag")
+
+  // Session metadata (non-sensitive)
+  accountMarker       String?   @map("account_marker") // e.g., masked email or MLife number
+
+  // Expiration tracking
+  expiresAt           DateTime? @map("expires_at")
+  lastVerifiedAt      DateTime? @map("last_verified_at")
+
+  // Connection method
+  connectionMethod    String    @default("interactive") @map("connection_method") // "interactive" or "local_connector"
+
+  // Status
+  isActive            Boolean   @default(true) @map("is_active")
+  lastError           String?   @map("last_error")
+
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("mgm_sessions")
+}
+
+// One-time codes for local connector authentication
+model ConnectorCode {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  code      String   @unique
+  expiresAt DateTime @map("expires_at")
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([code])
+  @@map("connector_codes")
+}
+
+// ============================================
+// Watchlists & Rate Tracking
+// ============================================
+
+model Watchlist {
+  id              String    @id @default(uuid())
+  userId          String    @map("user_id")
+  name            String
+
+  // Properties to track (JSON array of property codes)
+  // e.g., ["bellagio", "aria", "mgm-grand"]
+  propertiesJson  String    @map("properties_json") @db.Text
+
+  // Date rules (JSON)
+  // Can be specific dates or recurring patterns
+  // e.g., {"type": "specific", "ranges": [{"checkIn": "2024-03-01", "checkOut": "2024-03-03"}]}
+  // e.g., {"type": "recurring", "pattern": "first-weekend", "months": 3}
+  dateRulesJson   String    @map("date_rules_json") @db.Text
+
+  // Room type filter (optional)
+  roomTypeFilter  String?   @map("room_type_filter")
+
+  // Rate type tracking
+  trackMember     Boolean   @default(true) @map("track_member")
+  trackPublic     Boolean   @default(true) @map("track_public")
+
+  // Alert thresholds (JSON)
+  // e.g., {"percentDrop": 10, "absoluteBelow": 150}
+  thresholdsJson  String?   @map("thresholds_json") @db.Text
+
+  // Status
+  isActive        Boolean   @default(true) @map("is_active")
+  alertsMuted     Boolean   @default(false) @map("alerts_muted")
+
+  // Tracking metadata
+  lastCheckedAt   DateTime? @map("last_checked_at")
+  nextCheckAt     DateTime? @map("next_check_at")
+  checkIntervalHours Int    @default(6) @map("check_interval_hours")
+
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rateObservations RateObservation[]
+  alerts          Alert[]
+
+  @@index([userId])
+  @@index([nextCheckAt])
+  @@map("watchlists")
+}
+
+model RateObservation {
+  id            String    @id @default(uuid())
+  watchlistId   String    @map("watchlist_id")
+
+  // Property and date info
+  propertyCode  String    @map("property_code")
+  propertyName  String    @map("property_name")
+  checkIn       DateTime  @map("check_in")
+  checkOut      DateTime  @map("check_out")
+
+  // Rate information
+  rateType      String    @map("rate_type") // "member" or "public"
+  roomType      String?   @map("room_type")
+
+  // Pricing
+  nightlyRate   Decimal   @map("nightly_rate") @db.Decimal(10, 2)
+  totalPrice    Decimal   @map("total_price") @db.Decimal(10, 2)
+  taxesAndFees  Decimal?  @map("taxes_and_fees") @db.Decimal(10, 2)
+  resortFee     Decimal?  @map("resort_fee") @db.Decimal(10, 2)
+  currency      String    @default("USD")
+
+  // Source tracking
+  sourceUrl     String?   @map("source_url") @db.Text
+
+  // Raw response (for debugging/auditing)
+  rawJson       String?   @map("raw_json") @db.Text
+
+  // Metadata
+  scrapedAt     DateTime  @default(now()) @map("scraped_at")
+
+  watchlist     Watchlist @relation(fields: [watchlistId], references: [id], onDelete: Cascade)
+
+  @@index([watchlistId])
+  @@index([watchlistId, propertyCode, checkIn, rateType])
+  @@index([scrapedAt])
+  @@map("rate_observations")
+}
+
+// ============================================
+// Alerts
+// ============================================
+
+model Alert {
+  id            String    @id @default(uuid())
+  userId        String    @map("user_id")
+  watchlistId   String    @map("watchlist_id")
+
+  // Alert details
+  alertType     String    @map("alert_type") // "price_drop_percent", "price_below_threshold", "session_expired"
+
+  // Property/rate context
+  propertyCode  String?   @map("property_code")
+  propertyName  String?   @map("property_name")
+  checkIn       DateTime? @map("check_in")
+  checkOut      DateTime? @map("check_out")
+
+  // Price context
+  previousPrice Decimal?  @map("previous_price") @db.Decimal(10, 2)
+  currentPrice  Decimal?  @map("current_price") @db.Decimal(10, 2)
+  percentChange Decimal?  @map("percent_change") @db.Decimal(5, 2)
+
+  // Alert message
+  title         String
+  message       String    @db.Text
+
+  // Status
+  isRead        Boolean   @default(false) @map("is_read")
+  emailSent     Boolean   @default(false) @map("email_sent")
+  emailSentAt   DateTime? @map("email_sent_at")
+
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  watchlist     Watchlist @relation(fields: [watchlistId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@index([createdAt])
+  @@map("alerts")
+}
+
+// ============================================
+// Job Queue (for rate checking)
+// ============================================
+
+model RateCheckJob {
+  id            String    @id @default(uuid())
+  watchlistId   String    @map("watchlist_id")
+
+  // Job status
+  status        String    @default("pending") // "pending", "running", "completed", "failed"
+
+  // Timing
+  scheduledAt   DateTime  @map("scheduled_at")
+  startedAt     DateTime? @map("started_at")
+  completedAt   DateTime? @map("completed_at")
+
+  // Results
+  ratesFound    Int?      @map("rates_found")
+  errorMessage  String?   @map("error_message") @db.Text
+
+  // Retry tracking
+  attempts      Int       @default(0)
+  maxAttempts   Int       @default(3) @map("max_attempts")
+
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  @@index([status, scheduledAt])
+  @@index([watchlistId])
+  @@map("rate_check_jobs")
+}
