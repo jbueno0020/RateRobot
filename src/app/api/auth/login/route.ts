@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { loginUser } from "@/lib/auth";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -26,6 +27,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Handle Prisma/database errors - don't expose internal details
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError ||
+      error instanceof Prisma.PrismaClientInitializationError ||
+      (error instanceof Error && error.message.includes("prisma"))
+    ) {
+      console.error("Database error during login:", error);
+      return NextResponse.json(
+        { success: false, error: "Service temporarily unavailable. Please try again later." },
+        { status: 503 }
+      );
+    }
+
+    // For auth errors (invalid credentials), return the message
+    // These are safe messages we control from loginUser()
     const message = error instanceof Error ? error.message : "Login failed";
     return NextResponse.json(
       { success: false, error: message },
